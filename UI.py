@@ -6,6 +6,7 @@ from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, QTimer
 import Function  # 导入功能模块
 import BestRecord  # 导入最佳记录模块
+import RecordSteps  # 导入记录步骤模块
 
 class MemoryGame(QMainWindow):
     def __init__(self):
@@ -20,6 +21,13 @@ class MemoryGame(QMainWindow):
         self.time_label = QLabel("用时: 0分0秒")  # 时间显示标签
         self.step_count = 0  # 添加步数计数器
         self.step_label = QLabel("步数: 0")  
+        # 新增步骤记录相关变量
+        self.step_records = []  # 记录当前游戏的每一步
+        self.replay_timer = QTimer(self)  # 回放计时器
+        self.replay_timer.timeout.connect(self.next_replay_step)
+        self.replay_index = 0  # 回放步骤索引
+        self.is_replaying = False  # 是否正在回放
+
         self.init_ui()
 
     def init_ui(self):
@@ -28,6 +36,7 @@ class MemoryGame(QMainWindow):
         icon = QIcon("img/number.png")
         self.setWindowIcon(icon)
         self.setMinimumSize(1000, 800)
+        self.setMaximumSize(1000, 800)
         
         # 创建工具栏
         self.create_toolbar()
@@ -87,35 +96,11 @@ class MemoryGame(QMainWindow):
         self.cards = []
         self.opened_cards = []  # 重置翻开的卡片列表
         
-        # 卡片样式（统一颜色）
-        card_style = """
-            QPushButton {
-                background-color: #3498db;
-                border-radius: 8px;
-                font-size: 24px;
-                font-weight: bold;
-                color: transparent;  # 初始隐藏数字
-                min-width: 80px;
-                min-height: 80px;
-            }
-            QPushButton:hover {
-                background-color: #2980b9;
-            }
-            QPushButton:pressed {
-                background-color: #1f6dad;
-            }
-            QPushButton:disabled {
-                background-color: #2ecc71;
-                color: white;
-            }
-        """
-        
         # 创建卡片按钮
         for i in range(rows):
             row_buttons = []
             for j in range(cols):
                 btn = QPushButton()
-                btn.setStyleSheet(card_style)
                 btn.setFixedSize(100, 100) 
                 btn.setProperty("row", i)  # 存储位置信息
                 btn.setProperty("col", j)
@@ -187,8 +172,20 @@ class MemoryGame(QMainWindow):
                 widget.deleteLater()
 
     def on_card_clicked(self):
-        """卡片点击事件处理"""
+        # 如果正在回放，不响应点击
+        if self.is_replaying:
+            return
+            
         btn = self.sender()
+        
+        # 记录步骤：位置和值
+        step_info = {
+            "row": btn.property("row"),
+            "col": btn.property("col"),
+            "value": btn.property("value"),
+            "step": self.step_count
+        }
+        self.step_records.append(step_info)
         
         # 忽略已匹配或已翻开的卡片
         if btn.property("matched") or btn in self.opened_cards:
@@ -230,6 +227,11 @@ class MemoryGame(QMainWindow):
             if self.matched_pairs == self.total_pairs:
                 elapsed = Function.time_end(self.start_time)
                 self.timer.stop()
+                # 保存步骤记录
+                RecordSteps.save_step_record(
+                    self.get_current_difficulty(),
+                    self.step_records
+                )
                 
                 # 获取当前难度
                 difficulty = self.get_current_difficulty()
@@ -268,6 +270,73 @@ class MemoryGame(QMainWindow):
         # 清空翻开的卡片列表并重新启用所有卡片
         self.opened_cards = []
         self.disable_all_cards(False)
+
+    def start_replay(self):
+        """开始回放最近的游戏记录"""
+        # 获取最新的对应难度的记录
+        record = RecordSteps.get_latest_step_record(self.get_current_difficulty())
+        
+        if not record:
+            QMessageBox.information(self, "提示", "没有可回放的游戏记录")
+            return
+            
+        # 准备回放环境
+        self.is_replaying = True
+        self.replay_index = 0
+        self.replay_steps = record["steps"]
+        
+        # 重置游戏界面
+        self.reset_game()
+        # 停止真实游戏计时
+        self.timer.stop()
+        
+        # 禁用所有卡片交互
+        self.disable_all_cards(True)
+        
+        self.statusBar().showMessage(f"正在回放 - 共{len(self.replay_steps)}步")
+        # 开始回放
+        self.replay_timer.start(1000)  # 每秒一步
+
+    def next_replay_step(self):
+        """回放下一步"""
+        if self.replay_index >= len(self.replay_steps):
+            # 回放结束
+            self.replay_timer.stop()
+            self.is_replaying = False
+            self.statusBar().showMessage("回放结束")
+            return
+            
+        # 获取当前步骤信息
+        step = self.replay_steps[self.replay_index]
+        row, col = step["row"], step["col"]
+        btn = self.cards[row][col]
+        
+        # 模拟点击效果
+        btn.setStyleSheet(btn.styleSheet().replace("color: transparent", "color: white"))
+        btn.setText(str(step["value"]))
+        
+        # 处理两张卡片的情况
+        if self.replay_index % 2 == 1:  # 偶数步(0开始)，即第二张卡片
+            # 延迟关闭不匹配的卡片
+            self.replay_timer.setInterval(1000)  # 显示1秒后继续
+            # 检查是否匹配
+            prev_step = self.replay_steps[self.replay_index - 1]
+            prev_btn = self.cards[prev_step["row"]][prev_step["col"]]
+            
+            if prev_step["value"] != step["value"]:
+                # 不匹配的卡片，需要翻回去
+                def hide_cards():
+                    prev_btn.setStyleSheet(prev_btn.styleSheet().replace("color: white", "color: transparent"))
+                    prev_btn.setText("")
+                    btn.setStyleSheet(btn.styleSheet().replace("color: white", "color: transparent"))
+                    btn.setText("")
+                    
+                QTimer.singleShot(800, hide_cards)  # 0.8秒后隐藏
+        else:
+            self.replay_timer.setInterval(500)  # 第一张卡片显示0.5秒
+        
+        self.replay_index += 1
+        self.step_label.setText(f"回放步数: {self.replay_index}/{len(self.replay_steps)}")
 
     def disable_all_cards(self, disable):
         """启用/禁用所有未匹配的卡片"""
@@ -326,6 +395,20 @@ class MemoryGame(QMainWindow):
         reset_action.setStatusTip("重置当前游戏")
         reset_action.triggered.connect(self.reset_game)
         toolbar.addAction(reset_action)
+
+         # 添加分隔线
+        toolbar.addSeparator()
+        
+        # 新增：回放动作
+        replay_action = QAction(
+            QIcon.fromTheme("media-playback-start"),  # 播放图标
+            "回看记录", 
+            self
+        )
+        replay_action.setShortcut("Ctrl+P")
+        replay_action.setStatusTip("回看最近的游戏记录")
+        replay_action.triggered.connect(self.start_replay)
+        toolbar.addAction(replay_action)
         
         # 添加分隔线
         toolbar.addSeparator()
@@ -422,6 +505,8 @@ class MemoryGame(QMainWindow):
         """开始游戏事件处理"""
         self.statusBar().showMessage(f"游戏开始 - 当前难度：{self.get_current_difficulty()}")
         self.create_game_board()  # 创建游戏卡片布局
+        self.step_count = 0  # 重置步数
+        self.step_label.setText(f"步数: 0")  # 更新步数显示
         # 开始计时
         self.start_time = Function.time_start()
         self.timer.start(1000)  # 每秒更新一次
