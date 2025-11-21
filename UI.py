@@ -6,19 +6,27 @@ from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, QTimer
 import Function  # 导入功能模块
 
-class MaximizeMainWindow(QMainWindow):
+class MemoryGame(QMainWindow):
     def __init__(self):
         super().__init__()
         self.cards = []  # 存储卡片按钮
+        self.opened_cards = []  # 存储当前翻开的卡片
+        self.matched_pairs = 0  # 已匹配的对数
+        self.total_pairs = 0  # 总对数
+        self.start_time = None  # 游戏开始时间
+        self.timer = QTimer(self)  # 计时器
+        self.timer.timeout.connect(self.update_time)  # 定时更新时间显示
+        self.time_label = QLabel("用时: 0分0秒")  # 时间显示标签
         self.init_ui()
 
     def init_ui(self):
-        # 窗口基础设置（保持不变）
+        # 窗口基础设置
         self.setWindowTitle("数字匹配游戏")
-        self.setMinimumSize(800, 600)
-        self.showMaximized()
+        icon = QIcon("img/number.png")
+        self.setWindowIcon(icon)
+        self.setMinimumSize(1000, 800)
         
-        # 创建工具栏（保持不变）
+        # 创建工具栏
         self.create_toolbar()
         
         # 中心部件与布局
@@ -37,14 +45,26 @@ class MaximizeMainWindow(QMainWindow):
         # 清空现有布局
         self.clear_layout(self.main_layout)
         
+        # 添加时间显示到布局右上角
+        time_layout = QVBoxLayout()
+        time_layout.setAlignment(Qt.AlignRight)
+        self.time_label.setStyleSheet("font-size: 16px; color: #2c3e50;")
+        time_layout.addWidget(self.time_label)
+        self.main_layout.addLayout(time_layout)
+        
         # 根据难度获取行列数
         difficulty = self.get_current_difficulty()
-        if difficulty == "4*4":
-            rows, cols = 4, 4
+        if difficulty == "3*3":
+            rows, cols = 3, 3
         elif difficulty == "4*6":
             rows, cols = 4, 6
-        else:  # 默认简单难度
-            rows, cols = 3, 4
+        elif difficulty == "4*4":
+            rows, cols = 4, 4 
+        
+        # 计算总对数
+        total_elements = rows * cols
+        self.total_pairs = total_elements // 2
+        self.matched_pairs = 0  # 重置已匹配对数
         
         # 使用Function生成随机数字数组
         self.number_array = Function.generate_random_array(rows, cols)
@@ -56,6 +76,7 @@ class MaximizeMainWindow(QMainWindow):
         
         # 存储卡片按钮的列表
         self.cards = []
+        self.opened_cards = []  # 重置翻开的卡片列表
         
         # 卡片样式（统一颜色）
         card_style = """
@@ -74,6 +95,10 @@ class MaximizeMainWindow(QMainWindow):
             QPushButton:pressed {
                 background-color: #1f6dad;
             }
+            QPushButton:disabled {
+                background-color: #2ecc71;
+                color: white;
+            }
         """
         
         # 创建卡片按钮
@@ -82,9 +107,11 @@ class MaximizeMainWindow(QMainWindow):
             for j in range(cols):
                 btn = QPushButton()
                 btn.setStyleSheet(card_style)
+                btn.setFixedSize(100, 100) 
                 btn.setProperty("row", i)  # 存储位置信息
                 btn.setProperty("col", j)
                 btn.setProperty("value", self.number_array[i][j])  # 存储数字值
+                btn.setProperty("matched", False)  # 标记是否已匹配
                 btn.clicked.connect(self.on_card_clicked)
                 grid_layout.addWidget(btn, i, j)
                 row_buttons.append(btn)
@@ -151,12 +178,64 @@ class MaximizeMainWindow(QMainWindow):
                 widget.deleteLater()
 
     def on_card_clicked(self):
-        """卡片点击事件处理（简单实现）"""
+        """卡片点击事件处理"""
         btn = self.sender()
+        
+        # 忽略已匹配或已翻开的卡片
+        if btn.property("matched") or btn in self.opened_cards:
+            return
+            
+        # 最多同时翻开两张卡片
+        if len(self.opened_cards) >= 2:
+            return
+        
         # 显示卡片数字
-        btn.setStyleSheet(btn.styleSheet().replace("color: transparent", f"color: white"))
+        btn.setStyleSheet(btn.styleSheet().replace("color: transparent", "color: white"))
         btn.setText(str(btn.property("value")))
+        self.opened_cards.append(btn)
+        
+        # 当翻开两张卡片时检查是否匹配
+        if len(self.opened_cards) == 2:
+            # 禁用所有卡片防止连续点击
+            self.disable_all_cards(True)
+            # 延迟检查匹配，让玩家看清两张卡片
+            QTimer.singleShot(1000, self.check_match)
 
+    def check_match(self):
+        """检查两张翻开的卡片是否匹配"""
+        card1, card2 = self.opened_cards
+        
+        if card1.property("value") == card2.property("value"):
+            # 匹配成功，标记为已匹配并禁用
+            card1.setProperty("matched", True)
+            card2.setProperty("matched", True)
+            card1.setEnabled(False)
+            card2.setEnabled(False)
+            self.matched_pairs += 1
+            
+            # 检查是否所有卡片都已匹配
+            if self.matched_pairs == self.total_pairs:
+                elapsed = Function.time_end(self.start_time)
+                self.timer.stop()
+                QMessageBox.information(self, "恭喜", 
+                                      f"恭喜你完成了游戏！\n总用时：{Function.format_time(elapsed)}")
+        else:
+            # 不匹配，隐藏数字
+            card1.setStyleSheet(card1.styleSheet().replace("color: white", "color: transparent"))
+            card2.setStyleSheet(card2.styleSheet().replace("color: white", "color: transparent"))
+            card1.setText("")
+            card2.setText("")
+        
+        # 清空翻开的卡片列表并重新启用所有卡片
+        self.opened_cards = []
+        self.disable_all_cards(False)
+
+    def disable_all_cards(self, disable):
+        """启用/禁用所有未匹配的卡片"""
+        for row in self.cards:
+            for btn in row:
+                if not btn.property("matched"):
+                    btn.setEnabled(not disable)
 
     def create_toolbar(self):
         """创建工具栏，包含游戏常用功能"""
@@ -214,7 +293,7 @@ class MaximizeMainWindow(QMainWindow):
         
         # 3. 难度选择（下拉菜单）
         difficulty_menu = QMenu("难度选择", self)
-        self.difficulty_action = QAction("4*4", self, checkable=True, checked=True)
+        self.difficulty_action = QAction("3*3", self, checkable=True, checked=True)
         easy_action = QAction("4*4", self, checkable=True)
         hard_action = QAction("4*6", self, checkable=True)
         
@@ -263,35 +342,82 @@ class MaximizeMainWindow(QMainWindow):
         
         # 设置状态栏（显示提示信息）
         self.statusBar().showMessage("欢迎来到数字匹配游戏！")
+    
+    def remove_all_buttons(self):
+        """清空界面中所有 QPushButton 组件（保留其他组件）"""
+        # 递归遍历布局，筛选并删除 Button
+        def _remove_buttons_from_layout(layout):
+            if layout is None:
+                return
+            
+            # 遍历布局中的所有项目（组件或子布局）
+            to_remove = []  # 存储需要删除的 Button 项目
+            for i in range(layout.count()):
+                item = layout.itemAt(i)
+                
+                # 1. 如果是 Button 组件，标记为待删除
+                widget = item.widget()
+                if isinstance(widget, QPushButton):
+                    to_remove.append(item)
+                    widget.deleteLater()  # 彻底删除 Button，释放资源
+                else:
+                    # 2. 如果是子布局，递归遍历
+                    sub_layout = item.layout()
+                    if sub_layout is not None:
+                        _remove_buttons_from_layout(sub_layout)
+            
+            # 从布局中移除所有标记的 Button 项目
+            for item in to_remove:
+                layout.removeItem(item)
+        
+        # 从顶层布局开始遍历（包含所有子布局）
+        _remove_buttons_from_layout(self.main_layout)
+        
+        # 重置游戏中与 Button 相关的状态变量
+        self.cards = []
+        self.opened_cards = []
+        self.matched_pairs = 0
+        self.total_pairs = 0
 
     def start_game(self):
         """开始游戏事件处理"""
         self.statusBar().showMessage(f"游戏开始 - 当前难度：{self.get_current_difficulty()}")
         self.create_game_board()  # 创建游戏卡片布局
+        # 开始计时
+        self.start_time = Function.time_start()
+        self.timer.start(1000)  # 每秒更新一次
 
     def reset_game(self):
         """重置游戏事件处理"""
+        self.timer.stop()  # 停止计时器
         self.statusBar().showMessage(f"游戏已重置 - 当前难度：{self.get_current_difficulty()}")
+        self.remove_all_buttons()  # 清空所有按钮
         self.create_game_board()  # 重新创建游戏卡片
-        QMessageBox.information(self, "重置成功", "游戏已重置，可重新开始！")
+        # 重新开始计时
+        self.start_time = Function.time_start()
+        self.timer.start(1000)
 
+    def update_time(self):
+        """更新时间显示"""
+        if self.start_time:
+            elapsed = Function.time_end(self.start_time)
+            self.time_label.setText(f"用时: {Function.format_time(elapsed)}")
 
     def show_help(self):
         """显示帮助信息"""
-        help_text = """
-        数字匹配游戏规则：
-        1. 游戏界面会显示若干带有数字的卡片
-        2. 点击两张相同数字的卡片即可消除
-        3. 消除所有卡片即可获胜
-        4. 难度说明：
-           - 简单：12张卡片，数字范围1-6
-           - 中等：20张卡片，数字范围1-10
-           - 困难：30张卡片，数字范围1-15
-        5. 快捷键：
-           - Ctrl+S：开始游戏
-           - Ctrl+R：重置游戏
-           - F1：查看帮助
-           - Ctrl+Q：退出游戏
+        help_text = """数字匹配游戏规则：
+1. 游戏界面会显示若干带有数字的卡片
+2. 点击两张相同数字的卡片即可消除
+3. 消除所有卡片即可获胜
+4. 难度说明：
+    - 简单：12张卡片，数字范围1-6
+    - 中等：16张卡片，数字范围1-8
+    - 困难：24张卡片，数字范围1-12
+5. 快捷键：
+    - Ctrl+S：开始游戏
+    - Ctrl+R：重置游戏
+    - F1：查看帮助
+    - Ctrl+Q：退出游戏
         """
         QMessageBox.information(self, "游戏帮助", help_text)
 
@@ -300,17 +426,17 @@ class MaximizeMainWindow(QMainWindow):
         for action in self.difficulty_action.actionGroup().actions():
             if action.isChecked():
                 return action.text()
-        return "简单"
+        return "3*4"
 
 if __name__ == "__main__":
     # 创建应用实例
     app = QApplication(sys.argv)
     
-    # 设置应用字体（可选，让界面更美观）
+    # 设置应用字体
     app.setFont(QFont("Microsoft YaHei", 10))
     
     # 创建主窗口并显示
-    window = MaximizeMainWindow()
+    window = MemoryGame()
     window.show()  
     
     # 运行应用循环
