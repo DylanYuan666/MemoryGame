@@ -1,10 +1,11 @@
 import sys
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, 
                              QLabel, QPushButton, QToolBar, QAction, QActionGroup, QMenu, 
-                             QMessageBox, QGridLayout, QFrame)
+                             QMessageBox, QGridLayout, QFrame, QHBoxLayout)
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import Qt, QSize, QTimer
 import Function  # 导入功能模块
+import BestRecord  # 导入最佳记录模块
 
 class MemoryGame(QMainWindow):
     def __init__(self):
@@ -17,6 +18,8 @@ class MemoryGame(QMainWindow):
         self.timer = QTimer(self)  # 计时器
         self.timer.timeout.connect(self.update_time)  # 定时更新时间显示
         self.time_label = QLabel("用时: 0分0秒")  # 时间显示标签
+        self.step_count = 0  # 添加步数计数器
+        self.step_label = QLabel("步数: 0")  
         self.init_ui()
 
     def init_ui(self):
@@ -44,14 +47,20 @@ class MemoryGame(QMainWindow):
         """创建游戏卡片布局"""
         # 清空现有布局
         self.clear_layout(self.main_layout)
-        
-        # 添加时间显示到布局右上角
-        time_layout = QVBoxLayout()
-        time_layout.setAlignment(Qt.AlignRight)
+
+        # 添加时间和步数显示到布局右上角
+        status_layout = QHBoxLayout()  # 使用水平布局放置时间和步数
+        status_layout.setAlignment(Qt.AlignRight)
+
         self.time_label.setStyleSheet("font-size: 16px; color: #2c3e50;")
-        time_layout.addWidget(self.time_label)
-        self.main_layout.addLayout(time_layout)
-        
+        self.step_label.setStyleSheet("font-size: 16px; color: #2c3e50;")
+
+        status_layout.addWidget(self.time_label)
+        status_layout.addSpacing(20)  # 添加间距
+        status_layout.addWidget(self.step_label)
+
+        self.main_layout.addLayout(status_layout)
+
         # 根据难度获取行列数
         difficulty = self.get_current_difficulty()
         if difficulty == "3*3":
@@ -189,6 +198,10 @@ class MemoryGame(QMainWindow):
         if len(self.opened_cards) >= 2:
             return
         
+        # 增加步数并更新显示
+        self.step_count = Function.count_steps(self.step_count)
+        self.step_label.setText(f"步数: {self.step_count}")
+        
         # 显示卡片数字
         btn.setStyleSheet(btn.styleSheet().replace("color: transparent", "color: white"))
         btn.setText(str(btn.property("value")))
@@ -199,7 +212,7 @@ class MemoryGame(QMainWindow):
             # 禁用所有卡片防止连续点击
             self.disable_all_cards(True)
             # 延迟检查匹配，让玩家看清两张卡片
-            QTimer.singleShot(1000, self.check_match)
+            QTimer.singleShot(200, self.check_match)
 
     def check_match(self):
         """检查两张翻开的卡片是否匹配"""
@@ -217,8 +230,34 @@ class MemoryGame(QMainWindow):
             if self.matched_pairs == self.total_pairs:
                 elapsed = Function.time_end(self.start_time)
                 self.timer.stop()
-                QMessageBox.information(self, "恭喜", 
-                                      f"恭喜你完成了游戏！\n总用时：{Function.format_time(elapsed)}")
+                
+                # 获取当前难度
+                difficulty = self.get_current_difficulty()
+                
+                # 检查是否打破最佳记录
+                is_new_record = BestRecord.update_best_record(
+                    difficulty, 
+                    elapsed, 
+                    self.step_count
+                )
+                
+                # 获取最佳记录用于显示
+                best_record = BestRecord.get_best_record(difficulty)
+                best_time = Function.format_time(best_record["time"])
+                
+                # 显示游戏结果
+                if is_new_record:
+                    result_msg = (f"恭喜你完成了游戏！\n"
+                                f"总用时：{Function.format_time(elapsed)}\n"
+                                f"总步数：{self.step_count}\n"
+                                f"恭喜创造了新的最佳记录！")
+                else:
+                    result_msg = (f"恭喜你完成了游戏！\n"
+                                f"总用时：{Function.format_time(elapsed)}\n"
+                                f"总步数：{self.step_count}\n"
+                                f"当前最佳记录：{best_time}，{best_record['steps']}步")
+                
+                QMessageBox.information(self, "恭喜", result_msg)
         else:
             # 不匹配，隐藏数字
             card1.setStyleSheet(card1.styleSheet().replace("color: white", "color: transparent"))
@@ -392,6 +431,8 @@ class MemoryGame(QMainWindow):
         self.timer.stop()  # 停止计时器
         self.statusBar().showMessage(f"游戏已重置 - 当前难度：{self.get_current_difficulty()}")
         self.remove_all_buttons()  # 清空所有按钮
+        self.step_count = 0  # 重置步数
+        self.step_label.setText(f"步数: 0")  # 更新步数显示
         self.create_game_board()  # 重新创建游戏卡片
         # 重新开始计时
         self.start_time = Function.time_start()

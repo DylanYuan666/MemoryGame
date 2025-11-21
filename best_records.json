@@ -1,0 +1,14 @@
+{
+  "3*3": {
+    "time": 10.365970134735107,
+    "steps": 12
+  },
+  "4*4": {
+    "time": Infinity,
+    "steps": Infinity
+  },
+  "4*6": {
+    "time": Infinity,
+    "steps": Infinity
+  }
+}
