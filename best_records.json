@@ -4,8 +4,8 @@
     "steps": 4
   },
   "4*4": {
-    "time": Infinity,
-    "steps": Infinity
+    "time": 39.592267751693726,
+    "steps": 30
   },
   "4*6": {
     "time": Infinity,

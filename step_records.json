@@ -254,5 +254,416 @@
         "step": 15
       }
     ]
+  },
+  {
+    "timestamp": "2025-11-22T09:25:57.129310",
+    "difficulty": "4*4",
+    "total_steps": 33,
+    "steps": [
+      {
+        "row": 0,
+        "col": 0,
+        "value": 5,
+        "step": 0
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "value": 2,
+        "step": 1
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 1,
+        "step": 2
+      },
+      {
+        "row": 0,
+        "col": 0,
+        "value": 7,
+        "step": 0
+      },
+      {
+        "row": 2,
+        "col": 1,
+        "value": 6,
+        "step": 1
+      },
+      {
+        "row": 2,
+        "col": 3,
+        "value": 2,
+        "step": 2
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 6,
+        "step": 3
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 6,
+        "step": 4
+      },
+      {
+        "row": 2,
+        "col": 1,
+        "value": 6,
+        "step": 5
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "value": 3,
+        "step": 6
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "value": 4,
+        "step": 7
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "value": 8,
+        "step": 8
+      },
+      {
+        "row": 2,
+        "col": 0,
+        "value": 1,
+        "step": 9
+      },
+      {
+        "row": 3,
+        "col": 0,
+        "value": 8,
+        "step": 10
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "value": 8,
+        "step": 11
+      },
+      {
+        "row": 0,
+        "col": 0,
+        "value": 7,
+        "step": 12
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "value": 1,
+        "step": 13
+      },
+      {
+        "row": 2,
+        "col": 0,
+        "value": 1,
+        "step": 14
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "value": 1,
+        "step": 15
+      },
+      {
+        "row": 2,
+        "col": 3,
+        "value": 2,
+        "step": 16
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "value": 3,
+        "step": 17
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "value": 4,
+        "step": 18
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "value": 4,
+        "step": 19
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "value": 3,
+        "step": 20
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "value": 5,
+        "step": 21
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "value": 7,
+        "step": 22
+      },
+      {
+        "row": 0,
+        "col": 0,
+        "value": 7,
+        "step": 23
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "value": 2,
+        "step": 24
+      },
+      {
+        "row": 2,
+        "col": 3,
+        "value": 2,
+        "step": 25
+      },
+      {
+        "row": 1,
+        "col": 3,
+        "value": 5,
+        "step": 26
+      },
+      {
+        "row": 0,
+        "col": 3,
+        "value": 5,
+        "step": 27
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "value": 3,
+        "step": 28
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "value": 3,
+        "step": 29
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-22T10:40:33.858869",
+    "difficulty": "3*3",
+    "total_steps": 14,
+    "steps": [
+      {
+        "row": 0,
+        "col": 0,
+        "value": 4,
+        "step": 0
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 2,
+        "step": 1
+      },
+      {
+        "row": 1,
+        "col": 2,
+        "value": 5,
+        "step": 2
+      },
+      {
+        "row": 2,
+        "col": 0,
+        "value": 4,
+        "step": 3
+      },
+      {
+        "row": 0,
+        "col": 0,
+        "value": 4,
+        "step": 4
+      },
+      {
+        "row": 2,
+        "col": 0,
+        "value": 4,
+        "step": 5
+      },
+      {
+        "row": 2,
+        "col": 1,
+        "value": 3,
+        "step": 6
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "value": 3,
+        "step": 7
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 2,
+        "step": 8
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "value": 1,
+        "step": 9
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "value": 1,
+        "step": 10
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "value": 1,
+        "step": 11
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 2,
+        "step": 12
+      },
+      {
+        "row": 0,
+        "col": 2,
+        "value": 2,
+        "step": 13
+      }
+    ]
+  },
+  {
+    "timestamp": "2025-11-22T10:44:00.061989",
+    "difficulty": "3*3",
+    "total_steps": 18,
+    "steps": [
+      {
+        "row": 0,
+        "col": 0,
+        "value": 4,
+        "step": 0
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "value": 10,
+        "step": 1
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 1,
+        "step": 0
+      },
+      {
+        "row": 1,
+        "col": 0,
+        "value": 1,
+        "step": 1
+      },
+      {
+        "row": 0,
+        "col": 0,
+        "value": 3,
+        "step": 2
+      },
+      {
+        "row": 0,
+        "col": 1,
+        "value": 3,
+        "step": 3
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 1,
+        "step": 4
+      },
+      {
+        "row": 2,
+        "col": 0,
+        "value": 8,
+        "step": 5
+      },
+      {
+        "row": 2,
+        "col": 1,
+        "value": 2,
+        "step": 6
+      },
+      {
+        "row": 2,
+        "col": 2,
+        "value": 2,
+        "step": 7
+      },
+      {
+        "row": 2,
+        "col": 5,
+        "value": 12,
+        "step": 8
+      },
+      {
+        "row": 1,
+        "col": 4,
+        "value": 9,
+        "step": 9
+      },
+      {
+        "row": 1,
+        "col": 1,
+        "value": 1,
+        "step": 10
+      },
+      {
+        "row": 3,
+        "col": 1,
+        "value": 12,
+        "step": 11
+      },
+      {
+        "row": 3,
+        "col": 2,
+        "value": 8,
+        "step": 12
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "value": 6,
+        "step": 13
+      },
+      {
+        "row": 3,
+        "col": 4,
+        "value": 6,
+        "step": 14
+      },
+      {
+        "row": 3,
+        "col": 3,
+        "value": 6,
+        "step": 15
+      }
+    ]
   }
 ]
