@@ -30,17 +30,18 @@ class MemoryGame(QMainWindow):
         self.replay_index = 0  # 回放步骤索引
         self.is_replaying = False  # 是否正在回放
 
-        self.sound_player_click = QMediaPlayer(self)  # 可传入self作为父对象
-        audio_click_path = os.path.join("mus", "click.mp3")  # 拼接"mus"文件夹和文件名
-        media_click_content = QMediaContent(QUrl.fromLocalFile(audio_click_path))
-        self.sound_player_click.setMedia(media_click_content)
-
-        self.sound_player_connect = QMediaPlayer(self)  # 可传入self作为父对象
-        audio_connect_path = os.path.join("mus", "connect.mp3") 
-        media_connect_content = QMediaContent(QUrl.fromLocalFile(audio_connect_path))
-        self.sound_player_click.setMedia(media_connect_content)
+        self.sound_player_click = self.create_player("click.mp3")
+        self.sound_player_connect = self.create_player("match.mp3") 
+        self.sound_player_victory = self.create_player("victory.mp3")
 
         self.init_ui()
+
+    def create_player(self,filename):
+        player = QMediaPlayer()
+        audio_path = os.path.join("mus", filename)
+        media_content = QMediaContent(QUrl.fromLocalFile(audio_path))
+        player.setMedia(media_content)
+        return player
 
     def init_ui(self):
         # 窗口基础设置
@@ -90,6 +91,8 @@ class MemoryGame(QMainWindow):
             rows, cols = 4, 6
         elif difficulty == "4*4":
             rows, cols = 4, 4 
+        elif difficulty == "2*2":
+            rows, cols = 2, 2   
         
         # 计算总对数
         total_elements = rows * cols
@@ -241,6 +244,7 @@ class MemoryGame(QMainWindow):
             if self.matched_pairs == self.total_pairs:
                 elapsed = Function.time_end(self.start_time)
                 self.timer.stop()
+                self.sound_player_victory.play()  # 播放胜利音效
                 # 保存步骤记录
                 RecordSteps.save_step_record(
                     self.get_current_difficulty(),
@@ -429,18 +433,21 @@ class MemoryGame(QMainWindow):
         
         # 3. 难度选择（下拉菜单）
         difficulty_menu = QMenu("难度选择", self)
-        self.difficulty_action = QAction("3*3", self, checkable=True, checked=True)
-        easy_action = QAction("4*4", self, checkable=True)
+        self.easy_action = QAction("2*2", self, checkable=True, checked=True)
+        medium_action = QAction("4*4", self, checkable=True)
         hard_action = QAction("4*6", self, checkable=True)
+        strange_action = QAction("3*3", self, checkable=True)
         
         # 难度互斥组
         difficulty_group = QActionGroup(self)
-        difficulty_group.addAction(self.difficulty_action)
-        difficulty_group.addAction(easy_action)
+        difficulty_group.addAction(self.easy_action)
+        difficulty_group.addAction(medium_action)
+        difficulty_group.addAction(strange_action)
         difficulty_group.addAction(hard_action)
         
-        difficulty_menu.addAction(self.difficulty_action)
-        difficulty_menu.addAction(easy_action)
+        difficulty_menu.addAction(self.easy_action)
+        difficulty_menu.addAction(medium_action)
+        difficulty_menu.addAction(strange_action)
         difficulty_menu.addAction(hard_action)
         
         difficulty_action = QAction(
@@ -563,10 +570,10 @@ class MemoryGame(QMainWindow):
 
     def get_current_difficulty(self):
         """获取当前选择的难度"""
-        for action in self.difficulty_action.actionGroup().actions():
+        for action in self.easy_action.actionGroup().actions():
             if action.isChecked():
                 return action.text()
-        return "3*4"
+        return "2*2"  # 默认难度
 
 if __name__ == "__main__":
     # 创建应用实例

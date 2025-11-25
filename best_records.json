@@ -1,11 +1,15 @@
 {
+  "2*2": {
+    "time": 4.184663772583008,
+    "steps": 6
+  },
   "3*3": {
-    "time": 4.248839616775513,
-    "steps": 4
+    "time": Infinity,
+    "steps": Infinity
   },
   "4*4": {
-    "time": 39.592267751693726,
-    "steps": 30
+    "time": Infinity,
+    "steps": Infinity
   },
   "4*6": {
     "time": Infinity,

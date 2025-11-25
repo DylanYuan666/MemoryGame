@@ -8,6 +8,7 @@ def init_record_file():
     """初始化记录文件，如果文件不存在则创建并写入初始数据"""
     if not os.path.exists(RECORD_FILE):
         initial_data = {
+            "2*2": {"time": float('inf'), "steps": float('inf')},
             "3*3": {"time": float('inf'), "steps": float('inf')},
             "4*4": {"time": float('inf'), "steps": float('inf')},
             "4*6": {"time": float('inf'), "steps": float('inf')}
@@ -49,5 +50,8 @@ def get_best_records(difficulty):
     elif difficulty == "4*6":
         with open(RECORD_FILE, 'r', encoding='utf-8') as f:
             return json.load(f)["4*6"]
+    elif difficulty == "2*2":
+        with open(RECORD_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)["2*2"]
     else:
         return None
