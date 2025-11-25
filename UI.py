@@ -3,7 +3,9 @@ from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
                              QLabel, QPushButton, QToolBar, QAction, QActionGroup, QMenu, 
                              QMessageBox, QGridLayout, QFrame, QHBoxLayout)
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import Qt, QSize, QTimer
+from PyQt5.QtCore import Qt, QSize, QTimer, QUrl
+from PyQt5.QtMultimedia import QMediaPlayer,QMediaContent
+import os
 import Function  # 导入功能模块
 import BestRecord  # 导入最佳记录模块
 import RecordSteps  # 导入记录步骤模块
@@ -27,6 +29,16 @@ class MemoryGame(QMainWindow):
         self.replay_timer.timeout.connect(self.next_replay_step)
         self.replay_index = 0  # 回放步骤索引
         self.is_replaying = False  # 是否正在回放
+
+        self.sound_player_click = QMediaPlayer(self)  # 可传入self作为父对象
+        audio_click_path = os.path.join("mus", "click.mp3")  # 拼接"mus"文件夹和文件名
+        media_click_content = QMediaContent(QUrl.fromLocalFile(audio_click_path))
+        self.sound_player_click.setMedia(media_click_content)
+
+        self.sound_player_connect = QMediaPlayer(self)  # 可传入self作为父对象
+        audio_connect_path = os.path.join("mus", "connect.mp3") 
+        media_connect_content = QMediaContent(QUrl.fromLocalFile(audio_connect_path))
+        self.sound_player_click.setMedia(media_connect_content)
 
         self.init_ui()
 
@@ -177,6 +189,7 @@ class MemoryGame(QMainWindow):
             return
             
         btn = self.sender()
+        self.sound_player_click.play()  # 播放点击音效
         
         # 记录步骤：位置和值
         step_info = {
@@ -217,6 +230,7 @@ class MemoryGame(QMainWindow):
         
         if card1.property("value") == card2.property("value"):
             # 匹配成功，标记为已匹配并禁用
+            self.sound_player_connect.play()  # 播放连接音效
             card1.setProperty("matched", True)
             card2.setProperty("matched", True)
             card1.setEnabled(False)
